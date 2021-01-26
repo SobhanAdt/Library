@@ -16,12 +16,17 @@ namespace Library.Controllers
     public class BookController : ControllerBase
     {
         private IRepository<Book> repository;
+        private IRepository<Author> aRepository;
+        private IRepository<Category> cRepository;
 
-
-        public BookController(IRepository<Book> repository)
+        public BookController(IRepository<Book> repository, IRepository<Author> aRepository, IRepository<Category> cRepository)
         {
             this.repository = repository;
+            this.aRepository = aRepository;
+            this.cRepository = cRepository;
         }
+
+
 
         [HttpGet]
         public List<Book> Get()
@@ -45,11 +50,25 @@ namespace Library.Controllers
 
         }
 
-        //[HttpPost("{search}")]
-        //public Search Search([FromBody] Search search)
-        //{
-        //    return search;
-        //}
+        [HttpPost("{search}")]
+        public void Search([FromBody] Search search)
+        {
+
+            for (int i = 0; i < search.authors.Count; i++)
+            {
+                var x1 = aRepository.GetAll().Where(x => x.LastName == search.authors[i]);
+            }
+
+            var x2 = repository.GetAll().Where(x => x.Publisher.PublisherName == search.Publication);
+
+            for (int i = 0; i < search.categories.Count; i++)
+            {
+                var x3 = cRepository.GetAll().Where(x => x.CategoryName == search.categories[i]);
+            }
+
+
+
+        }
 
         [HttpPut]
         public string Update([FromQuery] int id, [FromBody] Book book)

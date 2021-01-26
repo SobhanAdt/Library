@@ -17,9 +17,9 @@ namespace Library.Controllers
     {
         private IRepository<Book> repository;
         private IRepository<Author> aRepository;
-        private IRepository<Category> cRepository;
+        private IRepository<CategoryBook> cRepository;
 
-        public BookController(IRepository<Book> repository, IRepository<Author> aRepository, IRepository<Category> cRepository)
+        public BookController(IRepository<Book> repository, IRepository<Author> aRepository, IRepository<CategoryBook> cRepository)
         {
             this.repository = repository;
             this.aRepository = aRepository;
@@ -53,20 +53,37 @@ namespace Library.Controllers
         [HttpPost("{search}")]
         public void Search([FromBody] Search search)
         {
-            //
-            for (int i = 0; i < search.authors.Count; i++)
+
+            //for (int i = 0; i < search.authors.Count; i++)
+            //{
+            //    var x1 = aRepository.GetAll().Where(x => x.LastName == search.authors[i]);
+            //}
+
+            //var x2 = repository.GetAll().Where(x => x.Publisher.PublisherName == search.Publication);
+
+            //for (int i = 0; i < search.categories.Count; i++)
+            //{
+            //    var x3 = cRepository.GetAll().Where(x => x.CategoryName == search.categories[i]);
+            //}
+
+            //return x2.ToString();
+
+            try
             {
-                var x1 = aRepository.GetAll().Where(x => x.LastName == search.authors[i]);
+                var response = cRepository.GetAll()
+                    .Where(x => search.categories.Contains(x.Book.BookName)).Select(x => new
+                    {
+                        title = x.Book.BookName,
+                        pulishdate = x.Book.PublishDate,
+                        publisher = x.Book.Publisher.PublisherName,
+                        ISBN = x.Book.ISBN,
+                        author = x.Book.AuthorBooks.Select(x => x.Author.FirstName + " " + x.Author.LastName)
+                    }).ToList();
             }
-
-            var x2 = repository.GetAll().Where(x => x.Publisher.PublisherName == search.Publication);
-
-            for (int i = 0; i < search.categories.Count; i++)
+            catch
             {
-                var x3 = cRepository.GetAll().Where(x => x.CategoryName == search.categories[i]);
+                throw new Exception("Error Search");
             }
-
-
 
         }
 

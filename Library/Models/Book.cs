@@ -16,6 +16,11 @@ namespace Library.Models
 
         public int PublisherId { get; set; }
 
+
+        public string ISBN { get; set; }
+
+        public DateTime PublishDate { get; set; }
+
         
 
         #region Relation

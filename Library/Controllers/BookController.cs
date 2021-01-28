@@ -6,8 +6,11 @@ using System.Linq;
 using System.Security.Policy;
 using System.Threading.Tasks;
 using Library.Context;
+using Library.DTO;
 using Library.Models;
 using Library.Services;
+using Microsoft.AspNetCore.Components.Web;
+using Publisher = Library.Models.Publisher;
 
 namespace Library.Controllers
 {
@@ -17,15 +20,22 @@ namespace Library.Controllers
     {
         private IRepository<Book> repository;
         private IRepository<Author> aRepository;
-        private IRepository<CategoryBook> cRepository;
+        private IRepository<CategoryBook> CBepository;
+        private IRepository<Category> cRepository;
+        private IRepository<Publisher> pRepository;
+        private IRepository<AuthorBook> abRepository;
 
-        public BookController(IRepository<Book> repository, IRepository<Author> aRepository, IRepository<CategoryBook> cRepository)
+        public BookController(IRepository<Book> repository, IRepository<Author> aRepository,
+            IRepository<CategoryBook> cBepository, IRepository<Category> cRepository,
+            IRepository<Publisher> pRepository, IRepository<AuthorBook> abRepository)
         {
             this.repository = repository;
-            this.aRepository = aRepository;
+            aRepository = aRepository;
+            CBepository = cBepository;
             this.cRepository = cRepository;
+            this.pRepository = pRepository;
+            this.abRepository = abRepository;
         }
-
 
 
         [HttpGet]
@@ -51,38 +61,62 @@ namespace Library.Controllers
         }
 
         [HttpPost("{search}")]
-        public void Search([FromBody] Search search)
+        public ListSearch Search([FromBody] Search search)
         {
-
-            //for (int i = 0; i < search.authors.Count; i++)
-            //{
-            //    var x1 = aRepository.GetAll().Where(x => x.LastName == search.authors[i]);
-            //}
-
-            //var x2 = repository.GetAll().Where(x => x.Publisher.PublisherName == search.Publication);
-
-            //for (int i = 0; i < search.categories.Count; i++)
-            //{
-            //    var x3 = cRepository.GetAll().Where(x => x.CategoryName == search.categories[i]);
-            //}
-
-            //return x2.ToString();
-
             try
             {
-                var response = cRepository.GetAll()
-                    .Where(x => search.categories.Contains(x.Book.BookName)).Select(x => new
+                int publisherId = 0;
+                var categoryId = cRepository.GetAll().Where(x => search.categories.Contains(x.CategoryName))
+                    .Select(x => x.Id).ToList();
+
+                var authorIds = aRepository.GetAll().Where(x => search.authors.Contains(x.FirstName))
+                    .Select(x => x.Id).ToList();
+
+                var publisher = pRepository.GetAll().Where(x => x.PublisherName == search.Publication).FirstOrDefault();
+                if (publisher != null)
+                {
+                    publisherId = publisher.Id;
+                }
+
+                var bookId1 = CBepository.GetAll().Where(x => categoryId.Contains(x.CategoryId)).Select(x => x.BookId)
+                    .ToList();
+
+                var bookId2 = abRepository.GetAll().Where(x => authorIds.Contains(x.AuthorId)).Select(x => x.BookId)
+                    .ToList();
+
+                bookId1.AddRange(bookId2);
+
+                List<Book> books = new List<Book>();
+                if (bookId1.Count != 0)
+                {
+                    books = repository.GetAll().Where(x => bookId1.Contains(x.Id)).ToList();
+                }
+
+                if (publisherId != 0)
+                {
+                    var book1 = repository.GetAll().Where(x => bookId1.Contains(x.Id) && x.PublisherId == publisherId)
+                        .ToList();
+                }
+
+                if (books.Count != 0)
+                {
+                    var response = books.Select(x => new SearchResponse()
                     {
-                        title = x.Book.BookName,
-                        pulishdate = x.Book.PublishDate,
-                        publisher = x.Book.Publisher.PublisherName,
-                        ISBN = x.Book.ISBN,
-                        author = x.Book.AuthorBooks.Select(x => x.Author.FirstName + " " + x.Author.LastName)
+                        title = x.BookName,
+                        authors = x.AuthorBooks.Select(x => x.Author.FirstName + " " + x.Author.LastName).ToList(),
+                        publishDate = x.PublishDate,
+                        Publisher = x.Publisher.PublisherName,
+                        ISBN = x.ISBN
                     }).ToList();
+
+                    return new ListSearch() { Books = response };
+                }
+
+                return null;
             }
-            catch
+            catch 
             {
-                throw new Exception("Error Search");
+                throw new Exception("Error");
             }
 
         }

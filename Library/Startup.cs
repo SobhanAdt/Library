@@ -12,7 +12,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Library.Context;
 using Library.Models;
-using Library.Repository;
 using Library.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,7 +38,6 @@ namespace Library
             services.AddTransient<IRepository<Publisher>, EfRepository<Publisher>>();
             services.AddTransient<IRepository<CategoryBook>, EfRepository<CategoryBook>>();
             services.AddTransient<IRepository<AuthorBook>, EfRepository<AuthorBook>>();
-            services.AddScoped<ISearchRepository, SearchRepository>();
             services.AddControllers();
         }
 

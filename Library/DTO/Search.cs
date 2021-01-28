@@ -18,8 +18,5 @@ namespace Library.Models
         public string Publication { get; set; }
     }
 
-    public class ListSearch
-    {
-        public List<Search> books { get; set; }
-    }
+   
 }
